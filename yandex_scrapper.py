@@ -18,12 +18,12 @@ async def main():
         page = await browser.new_page()
         
         # navegar url
-        await page.goto(website) # page = pagina a navegar, variable del inicio jeje
+        await page.goto("https://yandex.com/images", wait_until="domcontentloaded", timeout=60000) # page = pagina a navegar, variable del inicio jeje
         
         # Selecciona el botón usando la clase principal que sale en la pagina al entrar en herramientas de desarrollador
         camera_button = page.locator(".HeaderDesktopActions-CbirButton")
 
-        await boton_camara.click() #clickear boton de camara
+        await camera_button.click() #clickear boton de camara
 
         input_file = page.locator('input[type="file"]') #variable que localiza el input de subida de archivos
 
