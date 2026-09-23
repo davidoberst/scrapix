@@ -1,33 +1,46 @@
 #Playwright abre Yandex Images
-#Sube tu imagen (input file)
+#Sube tu imagen usando el evento del botón Select File
 #Espera a que cargue resultados
-#Extrae: urls, thumbnails, dominios de origen
 
 import pyfiglet
 import asyncio
 from playwright.async_api import async_playwright
+
 website = "https://yandex.com/images"
-print(pyfiglet.figlet_format(text="      scrapix",font='smblock'),end="")
-print("by: https://github.com/davidoberst",end="")
+print(pyfiglet.figlet_format(text="      scrapix", font='smblock'), end="")
+print("by: https://github.com/davidoberst", end="")
 print("\n" + "-"*35)
 img = input('[+] Image path : ')
+
 async def main():
     async with async_playwright() as p:
-        # Lanza el navegador en modo headless (por defecto es True)
-        browser = await p.chromium.launch(headless=True)
-        page = await browser.new_page()
+        browser = await p.chromium.launch(headless=False)
+        context = await browser.new_context(permissions=[])
+        page = await context.new_page()
         
-        # navegar url
-        await page.goto("https://yandex.com/images", wait_until="domcontentloaded", timeout=60000) # page = pagina a navegar, variable del inicio jeje
+        print("[+] Loading Yandex...")
+        await page.goto(website, wait_until="domcontentloaded", timeout=60000) #evitar bloqueos 
         
-        # Selecciona el botón usando la clase principal que sale en la pagina al entrar en herramientas de desarrollador
-        camera_button = page.locator(".HeaderDesktopActions-CbirButton")
+        # 1. Abrir modal de la cámara
+        await page.locator(".HeaderDesktopActions-CbirButton").click()
 
-        await camera_button.click() #clickear boton de camara
+        # 2. Capturar el evento del selector de archivos al presionar Select file
+       
+        print("[+] Sending image to Yandex...")
+        async with page.expect_file_chooser() as fc_info:
+            await page.locator(".CbirPanel-FileControlsButton").click()
+            
+        file_chooser = await fc_info.value
+        await file_chooser.set_files(img)
+        print("[+] Image sended.")
 
-        input_file = page.locator('input[type="file"]') #variable que localiza el input de subida de archivos
+        # 3. Esperar a que la página procese y muestre los resultados
+        print("[+] Aaiting results from Yandex...")
+        await page.wait_for_selector(".CbirItem, .cbir-section, .CbirSites", timeout=30000)
+        print("[+] ¡Resultados cargados con éxito!")
 
-        await input_file.set_input_files(img) #subir imagen
+        print("[+] Proceso completado. Esperando 10 segundos antes de cerrar...")
+        await page.wait_for_timeout(10000)
 
         await browser.close()
 
