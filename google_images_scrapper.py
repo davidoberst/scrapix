@@ -13,7 +13,11 @@ async def main():
         
         print("[+] Loading Google Images...")
         await page.goto(website, wait_until="domcontentloaded", timeout=60000) #evitar bloqueos 
+        
         await page.locator(".hWdRGb").click()
+        await page.wait_for_timeout(2000)
+        await page.locator(".DV7the").click()
+        print('[+] Uploading image...')
         await page.wait_for_timeout(10000)
 
         await browser.close()
